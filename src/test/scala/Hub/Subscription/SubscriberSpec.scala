@@ -33,7 +33,7 @@ trait WebClientScope extends Specs2Context with After {
       })
   }
 
-  override def after = called = true
+  override def after = called = false
 }
 
 class SubscriberSpec extends Specification {
