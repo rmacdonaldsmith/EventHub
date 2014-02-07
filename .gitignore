@@ -1,0 +1,41 @@
+*.class
+*.log
+
+# sbt specific
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+# Scala-IDE specific
+.scala_dependencies
+
+# intellij specific
+**/.idea/workspace.xml
+**/.idea/tasks.xml
+
+# Scala / Play
+logs
+project/project
+project/target
+target
+tmp
+dist
+/out
+/RUNNING_PID
+
+# OS files
+.DS_Store
+
+# Text Editors
+*.swp
+.history
+/.idea
+/.idea_modules
+/.settings
+/.project
+/.classpath
+/*.iml
+
