@@ -43,7 +43,7 @@ class PersistenceSpec extends TestKit(ActorSystem("PersistenceSpec"))
   with BeforeAndAfterAll
   with ImplicitSender {
 
-  import TopicPersistenceSpec._
+  import PersistenceSpec._
 
   "A topic persistence actor" should {
 
@@ -52,9 +52,10 @@ class PersistenceSpec extends TestKit(ActorSystem("PersistenceSpec"))
 
       topicPersistence ! TopicPersistenceActor.NewTopic("http://hostname:2113/blah/events")
 
-      within(100 milli) {
-        expectMsg(new NewTopicResult(true, "http://hostname:2113/blah/events", null))
-      }
+      expectMsg(new NewTopicResult(true, "http://hostname:2113/blah/events", null))
+//      within(100 milli) {
+//        expectMsg(new NewTopicResult(true, "http://hostname:2113/blah/events", null))
+//      }
 
       topicPersistence ! TopicPersistenceActor.GetAllTopics
 
