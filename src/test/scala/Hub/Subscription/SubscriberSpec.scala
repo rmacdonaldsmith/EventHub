@@ -19,7 +19,7 @@ object SubscriberSpec {
   }
 }
 
-trait WebClientScope extends Specs2Context with After {
+trait WebClientScope extends Specs2ActorContext with After {
   var called = false
 
   def fakeWebClient = {

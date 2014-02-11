@@ -1,9 +1,10 @@
 package Hub.Subscription
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Props, Actor, ActorLogging}
 
 object TopicSubscriberRegistry {
-
+  def buildTestTopicPersistence(): Props =
+    Props()
 }
 
 class TopicSubscriberRegistry extends Actor with ActorLogging {
