@@ -30,11 +30,13 @@ object PersistenceSpec {
 
     override def addSubscriber(subscriberUrl: String, topic: String): Unit = ???
 
-    override def removeTopic(topic: String): Unit = topics -= topic
+    override def removeTopic(topic: String): Unit =
+      if (topics.contains(topic) == false) throw new Exception("Topic does not exist")
+      else topics -= topic
 
     override def newTopic(topic: String): Unit =
       if (topics.contains(topic)) throw new Exception("Topic already exists")
-      else topics updated (topic, Set[String]())
+      else topics += topic -> Set[String]()
   }
 }
 
@@ -47,21 +49,33 @@ class PersistenceSpec extends TestKit(ActorSystem("PersistenceSpec"))
 
   "A topic persistence actor" should {
 
+    val topicPersistence = system.actorOf(buildPersistenceActor(new FakePersistence), "TopicPeristenceActor")
+
     "persist a new topic" in {
-      val topicPersistence = system.actorOf(Props(new StepParent(buildPersistenceActor(new FakePersistence), testActor)))
 
       topicPersistence ! TopicPersistenceActor.NewTopic("http://hostname:2113/blah/events")
-
       expectMsg(new NewTopicResult(true, "http://hostname:2113/blah/events", null))
-//      within(100 milli) {
-//        expectMsg(new NewTopicResult(true, "http://hostname:2113/blah/events", null))
-//      }
 
       topicPersistence ! TopicPersistenceActor.GetAllTopics
+      expectMsg(new GetAllTopicsResult(Set("http://hostname:2113/blah/events")))
+    }
 
-      within(100 milli) {
-        expectMsg(new GetAllTopicsResult(Seq("http://hostname:2113/blah/events")))
-      }
+    "not accept a duplicate topic" in {
+      topicPersistence ! TopicPersistenceActor.NewTopic("http://hostname:2113/blah/events")
+      expectMsg(new NewTopicResult(false, "http://hostname:2113/blah/events", "Topic already exists"))
+    }
+
+    "remove a topic" in {
+      topicPersistence ! TopicPersistenceActor.RemoveTopic("http://hostname:2113/blah/events")
+      expectMsg(new TopicPersistenceActor.RemoveTopicResult(true, "http://hostname:2113/blah/events", null))
+
+      topicPersistence ! TopicPersistenceActor.GetAllTopics
+      expectMsg(new GetAllTopicsResult(Set()))
+    }
+
+    "not puke when removing a non-existent topic" in {
+      topicPersistence ! TopicPersistenceActor.RemoveTopic("http://hostname:2113/bad/events")
+      expectMsg(new TopicPersistenceActor.RemoveTopicResult(false, "http://hostname:2113/bad/events", "Topic does not exist"))
     }
   }
 
