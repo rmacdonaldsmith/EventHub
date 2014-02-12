@@ -39,13 +39,16 @@ class TopicPersistenceActor() extends Actor with ActorLogging {
   def receive = waiting
 
   def waiting: Receive = LoggingReceive {
-    case p: PersistenceOperation => context.become(runNext(Vector[PersistenceOperation](p)))
+    case p: PersistenceOperation =>
+      log.debug("Moving from waiting to runNext...")
+      context.become(runNext(Vector[PersistenceOperation](p)))
   }
 
   def runNext(queue: Vector[PersistenceOperation]): Receive = LoggingReceive {
     requestNumber += 1
     if(queue.isEmpty) { log.debug("Queue empty, entering waiting..."); waiting; }
     else {
+      log.debug("Queue not empty: " + queue.length)
       val worker = context.actorOf(workerProps, s"worker$requestNumber")
       worker ! queue.head
       running(queue)
@@ -56,8 +59,15 @@ class TopicPersistenceActor() extends Actor with ActorLogging {
     case r: Result =>
       val op = queue.head
       op.client ! r
+      log.debug("Result received. Operations in the queue: " + queue.length)
       context.become(runNext(queue.tail))
-    case w: PersistenceOperation => running(queue :+ w)
+    case w: PersistenceOperation =>
+      log.debug("Received persistence operation. Queue: " + queue.length)
+      context.become(enqueue(queue, w))
+  }
+
+  def enqueue(queue: Vector[PersistenceOperation], op: PersistenceOperation) = {
+    running(queue :+ op)
   }
 
   override def preStart() = {

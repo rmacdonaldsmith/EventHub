@@ -53,29 +53,34 @@ class PersistenceSpec extends TestKit(ActorSystem("PersistenceSpec"))
 
     "persist a new topic" in {
 
-      topicPersistence ! TopicPersistenceActor.NewTopic(testActor, "http://hostname:2113/blah/events")
-      expectMsg(new WriteResult(true, "http://hostname:2113/blah/events", null))
+      topicPersistence ! NewTopic(testActor, "http://hostname:2113/blah/events")
+      expectMsg(WriteResult(true, "http://hostname:2113/blah/events", null))
 
-      topicPersistence ! TopicPersistenceActor.GetAllTopics(testActor)
-      expectMsg(new GetAllTopicsResult(Set("http://hostname:2113/blah/events")))
+      topicPersistence ! GetAllTopics(testActor)
+      expectMsg(GetAllTopicsResult(Set("http://hostname:2113/blah/events")))
     }
 
     "not accept a duplicate topic" in {
-      topicPersistence ! TopicPersistenceActor.NewTopic(testActor, "http://hostname:2113/blah/events")
-      expectMsg(new WriteResult(false, "http://hostname:2113/blah/events", "Topic already exists"))
+      topicPersistence ! NewTopic(testActor, "http://hostname:2113/blah/events")
+      expectMsg(WriteResult(false, "http://hostname:2113/blah/events", "Topic already exists"))
     }
 
     "remove a topic" in {
-      topicPersistence ! TopicPersistenceActor.RemoveTopic(testActor, "http://hostname:2113/blah/events")
-      expectMsg(new TopicPersistenceActor.WriteResult(true, "http://hostname:2113/blah/events", null))
+      topicPersistence ! RemoveTopic(testActor, "http://hostname:2113/blah/events")
+      expectMsg(WriteResult(true, "http://hostname:2113/blah/events", null))
 
-      topicPersistence ! TopicPersistenceActor.GetAllTopics(testActor)
-      expectMsg(new GetAllTopicsResult(Set()))
+      topicPersistence ! GetAllTopics(testActor)
+      expectMsg(GetAllTopicsResult(Set()))
     }
 
     "not puke when removing a non-existent topic" in {
-      topicPersistence ! TopicPersistenceActor.RemoveTopic(testActor, "http://hostname:2113/bad/events")
-      expectMsg(new TopicPersistenceActor.WriteResult(false, "http://hostname:2113/bad/events", "Topic does not exist"))
+      topicPersistence ! RemoveTopic(testActor, "http://hostname:2113/bad/events")
+      expectMsg(new WriteResult(false, "http://hostname:2113/bad/events", "Topic does not exist"))
+    }
+
+    "handle requests in the order that they were sent" in {
+      for (i <- 1 to 5) topicPersistence ! NewTopic(testActor, s"http://hostname:2113/blah/events$i")
+      for (i <- 1 to 5) expectMsg(WriteResult(true, s"http://hostname:2113/blah/events$i", null))
     }
   }
 
