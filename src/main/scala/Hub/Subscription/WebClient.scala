@@ -2,10 +2,11 @@ package Hub.Subscription
 
 import scala.concurrent.{Promise, Future}
 import com.ning.http.client.{AsyncCompletionHandler, AsyncHttpClient, Response}
+import eventstore.Event
 
 
 trait WebClient {
-  def postUpdate(url: String, payload: Any, topic: String): Future[Int]
+  def postUpdate(url: String, payload: Event, topic: String): Future[Int]
   def postUnSubscribe(url: String, topic: String): Future[Int]
 }
 
@@ -15,7 +16,7 @@ object AsyncWebClient extends WebClient {
 
   private val client = new AsyncHttpClient
 
-  override def postUpdate(url: String, payload: Any, topic: String): Future[Int] = {
+  override def postUpdate(url: String, payload: Event, topic: String): Future[Int] = {
     val request = client.preparePost(url).build()
     val result = Promise[Int]()
     client.executeRequest(request, new AsyncCompletionHandler[Response]() {

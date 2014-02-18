@@ -10,6 +10,7 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2" % "2.3.7" % "test",
   "org.scalatest" %% "scalatest" % "1.9.1",
   "com.ning" % "async-http-client" % "1.8.1",
-  "org.mongodb" % "casbah_2.10" % "2.6.5"
+  "org.mongodb" % "casbah_2.10" % "2.6.5",
+  "com.geteventstore" % "eventstore-client_2.10" % "0.3.0"
 )
 

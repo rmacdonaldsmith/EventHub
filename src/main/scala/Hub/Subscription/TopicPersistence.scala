@@ -1,6 +1,7 @@
 package Hub.Subscription
 
-import akka.actor.{Props, ActorRef, ActorLogging, Actor}
+import scala.concurrent.duration._
+import akka.actor._
 import Hub.Subscription.TopicPersistenceActor._
 import akka.event.LoggingReceive
 
@@ -51,22 +52,26 @@ class TopicPersistenceActor() extends Actor with ActorLogging {
       log.debug("Queue not empty: " + queue.length)
       val worker = context.actorOf(workerProps, s"worker$requestNumber")
       worker ! queue.head
+      context.setReceiveTimeout(3 seconds)
       running(queue)
-      }
     }
+  }
 
   def running(queue: Vector[PersistenceOperation]): Receive = LoggingReceive {
     case r: Result =>
       val op = queue.head
       op.client ! r
       log.debug("Result received. Operations in the queue: " + queue.length)
+      //send poison pill to worker? Currently, worker commits suicide when it is done sending a result
       context.become(runNext(queue.tail))
     case w: PersistenceOperation =>
       log.debug("Received persistence operation. Queue: " + queue.length)
       context.become(enqueue(queue, w))
+    case ReceiveTimeout => //we did not get a response in time. need to set the timeout
+    case Terminated     => //death watch (or not since worker will suicide when done - need to send poison pill?)
   }
 
-  def enqueue(queue: Vector[PersistenceOperation], op: PersistenceOperation) = {
+  def enqueue(queue: Vector[PersistenceOperation], op: PersistenceOperation): Receive = {
     running(queue :+ op)
   }
 

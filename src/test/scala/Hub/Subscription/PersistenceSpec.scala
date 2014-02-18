@@ -1,6 +1,5 @@
 package Hub.Subscription
 
-import scala.concurrent.duration._
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.{Props, ActorSystem}
 import org.scalatest.{WordSpec, BeforeAndAfterAll}
@@ -49,7 +48,7 @@ class PersistenceSpec extends TestKit(ActorSystem("PersistenceSpec"))
 
   "A topic persistence actor" should {
 
-    val topicPersistence = system.actorOf(buildPersistenceActor(new FakePersistence), "TopicPeristenceActor")
+    val topicPersistence = system.actorOf(buildPersistenceActor(new FakePersistence), "TopicPersistenceActor")
 
     "persist a new topic" in {
 
@@ -73,7 +72,7 @@ class PersistenceSpec extends TestKit(ActorSystem("PersistenceSpec"))
       expectMsg(GetAllTopicsResult(Set()))
     }
 
-    "not puke when removing a non-existent topic" in {
+    "tell you when removing a non-existent topic" in {
       topicPersistence ! RemoveTopic(testActor, "http://hostname:2113/bad/events")
       expectMsg(new WriteResult(false, "http://hostname:2113/bad/events", "Topic does not exist"))
     }
@@ -81,6 +80,14 @@ class PersistenceSpec extends TestKit(ActorSystem("PersistenceSpec"))
     "handle requests in the order that they were sent" in {
       for (i <- 1 to 5) topicPersistence ! NewTopic(testActor, s"http://hostname:2113/blah/events$i")
       for (i <- 1 to 5) expectMsg(WriteResult(true, s"http://hostname:2113/blah/events$i", null))
+    }
+
+    "receive a failed response when the worker persistence fails" in {
+
+    }
+
+    "timeout when no response is received from the worker" in {
+
     }
   }
 

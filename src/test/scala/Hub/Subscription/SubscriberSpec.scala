@@ -4,7 +4,8 @@ import akka.actor.{ActorRef, Props}
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import org.specs2.mutable._
-import Hub.Subscription.SubscriberSpec.FakeWebClient
+import eventstore._
+import eventstore.EventRecord
 
 object SubscriberSpec {
 
@@ -13,10 +14,7 @@ object SubscriberSpec {
       override def client = webClient
     })
 
-  class FakeWebClient(updateCallback: (String, Any, String) => Future[Int], unSubscribeCallback: (String, String) => Future[Int]) extends WebClient {
-    override def postUpdate(url: String, payload: Any, topic: String): Future[Int] = updateCallback(url, payload, topic)
-    override def postUnSubscribe(url: String, topic: String): Future[Int] = unSubscribeCallback(url, topic)
-  }
+  def fakeEvent: EventRecord = new EventRecord(EventStream("id"), EventNumber(1), EventData("type"))
 }
 
 trait WebClientScope extends Specs2ActorContext with After {
@@ -46,7 +44,7 @@ class SubscriberSpec extends Specification {
       val callbackUrl = "http://localhost:9000/UserEvents"
       val subscriber: ActorRef = system.actorOf(buildTestSubscriber(callbackUrl, "unSubscribeUrl", "aTopic", fakeWebClient))
 
-      subscriber ! Subscriber.Update(Nil)
+      subscriber ! Subscriber.Update(fakeEvent)
 
       within(200 milli) {
         expectNoMsg
