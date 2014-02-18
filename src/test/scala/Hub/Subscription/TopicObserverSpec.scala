@@ -72,7 +72,7 @@ class TopicObserverSpec extends TestKit(ActorSystem("TopicObserverSpec"))
         topicObserver ! fakeEvent("data2")
 
         //we need to wait here for the fake subscriber callback to work
-        within(1 second) {
+        within(100 millis) {
           awaitAssert(received should have length (1))
         }
       }
@@ -82,8 +82,9 @@ class TopicObserverSpec extends TestKit(ActorSystem("TopicObserverSpec"))
         topicObserver ! NewSubscriber("callback_url_3", "unsubscribe")
         topicObserver ! fakeEvent("data3")
 
-        //received.iterator should contain(fakeEvent("data3"))
-
+        within(100 millis) {
+          awaitAssert(received.contains(fakeEvent("data3")))
+        }
       }
     }
 
