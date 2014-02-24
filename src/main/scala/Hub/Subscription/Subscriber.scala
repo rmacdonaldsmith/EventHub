@@ -22,8 +22,7 @@ class Subscriber(callbackUrl: String, unSubscribeUrl: String, topic: String) ext
       doUpdate(payload)
     case UnSubscribe =>
       doUnSubscribe
-    case Failed(clientUrl) =>
-      //log?
+    //case Failed(clientUrl) => //check this case...!! what causes this message to appear?
   }
 
   def doUpdate(payload: Event): Unit = {
